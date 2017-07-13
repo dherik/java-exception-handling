@@ -1,5 +1,7 @@
 package io.github.dherik.exception;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -64,6 +66,34 @@ public class SystemException extends RuntimeException {
     public SystemException set(String name, Object value) {
         properties.put(name, value);
         return this;
+    }
+
+    public void printStackTrace(PrintStream s) {
+        synchronized (s) {
+            printStackTrace(new PrintWriter(s));
+        }
+    }
+
+    public void printStackTrace(PrintWriter s) {
+        synchronized (s) {
+            s.println(this);
+            s.println("\t-------------------------------");
+            if (errorCode != null) {
+                s.println("\t" + errorCode + ":" + errorCode.getClass().getName());
+            }
+            for (String key : properties.keySet()) {
+                s.println("\t" + key + "=[" + properties.get(key) + "]");
+            }
+            s.println("\t-------------------------------");
+            StackTraceElement[] trace = getStackTrace();
+            for (StackTraceElement aTrace : trace) s.println("\tat " + aTrace);
+
+            Throwable ourCause = getCause();
+            if (ourCause != null) {
+                ourCause.printStackTrace(s);
+            }
+            s.flush();
+        }
     }
 
 }
